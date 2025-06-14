@@ -1,0 +1,5 @@
+.DS_Store
+.cursor/*
+*__pycache__*
+audio_srt.egg-info/
+englishpod_json/*
