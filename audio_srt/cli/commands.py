@@ -19,6 +19,7 @@ from audio_srt.models import ModelManager
 from audio_srt.utils.audio_utils import (
     is_valid_audio_file, get_supported_formats
 )
+from audio_srt.cli.batch import BatchProcessor, create_sample_config
 
 
 # 创建日志记录器
@@ -26,6 +27,9 @@ logger = logging.getLogger("audio_srt")
 
 # 支持的字幕格式
 SUPPORTED_FORMATS = FormatterFactory.get_available_formats()
+
+# 支持的配置文件格式
+CONFIG_FORMATS = ["yaml", "json"]
 
 
 def setup_logging(verbose: bool) -> None:
@@ -348,6 +352,11 @@ def convert(
     help="启用词级时间戳 (仅在JSON格式输出中可用)"
 )
 @click.option(
+    "--vad-filter/--no-vad-filter",
+    default=True,
+    help="使用语音活动检测过滤静音 [default: enabled]"
+)
+@click.option(
     "--force/--no-force", "-F/",
     default=False,
     help="强制处理已存在的字幕文件 [default: 不强制]"
@@ -366,6 +375,7 @@ def batch(
     compute_type: Optional[str],
     threads: int,
     word_timestamps: bool,
+    vad_filter: bool,
     force: bool
 ) -> None:
     """
@@ -406,7 +416,8 @@ def batch(
         model_size=model,
         language=None if language == "auto" else language,
         task="transcribe",
-        word_timestamps=word_timestamps and format == "json"
+        word_timestamps=word_timestamps and format == "json",
+        vad_filter=vad_filter
     )
     
     # 创建转录器
@@ -504,6 +515,67 @@ def models(ctx: click.Context) -> None:
     
     click.echo(f"\n推荐模型: {recommended} (根据系统资源自动选择)")
     click.echo(f"检测到的设备: {device}")
+
+
+@cli.command()
+@click.argument(
+    "config_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=False
+)
+@click.option(
+    "--create-sample", "-c",
+    type=click.Path(path_type=Path),
+    help="创建示例配置文件"
+)
+@click.option(
+    "--format", "-f",
+    type=click.Choice(CONFIG_FORMATS),
+    default="yaml",
+    help="配置文件格式 [default: yaml]"
+)
+@click.pass_context
+def config(
+    ctx: click.Context,
+    config_file: Optional[Path],
+    create_sample: Optional[Path],
+    format: str
+) -> None:
+    """
+    使用配置文件批量处理音频文件
+    
+    如果提供了CONFIG_FILE，将使用该配置文件进行批处理。
+    如果使用--create-sample选项，将创建一个示例配置文件。
+    """
+    # 创建示例配置文件
+    if create_sample:
+        create_sample_config(create_sample, format)
+        return
+    
+    # 如果没有提供配置文件路径，显示帮助信息
+    if not config_file:
+        click.echo(ctx.get_help())
+        return
+    
+    # 处理配置文件
+    try:
+        click.echo(f"使用配置文件: {config_file}")
+        
+        # 创建批处理器
+        processor = BatchProcessor()
+        
+        # 处理配置文件
+        report = processor.process_config_file(config_file)
+        
+        # 打印报告摘要
+        report.print_summary()
+        
+    except Exception as e:
+        click.echo(f"错误: {str(e)}", err=True)
+        if ctx.obj["verbose"]:
+            import traceback
+            click.echo(traceback.format_exc(), err=True)
+        sys.exit(1)
 
 
 def main() -> None:

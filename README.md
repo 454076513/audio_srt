@@ -209,5 +209,5 @@ audio-srt batch [OPTIONS] DIRECTORY
 MIT
 
 ```bash
-audio-srt batch ../bilibili_downloader/englishpod -o englishpod_json --model large-v3-turbo --format json --word-timestamps --language en
+audio-srt batch ../bilibili_downloader/englishpod -o englishpod_json --model large-v3-turbo --format json --word-timestamps --language en --no-vad-filter
 ```

@@ -18,4 +18,16 @@ from .subtitle_formatter import (
     FormatterFactory,
     format_timestamp,
     format_webvtt_timestamp
+)
+
+from .subtitle_optimizer import (
+    SubtitleOptimizer,
+    SubtitleOptimizerConfig
+)
+
+from .processor import (
+    TranscriptionProcessor,
+    ProcessorConfig,
+    TranscriptionJob,
+    JobStatus
 ) 
