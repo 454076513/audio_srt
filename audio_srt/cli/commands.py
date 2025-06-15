@@ -270,6 +270,7 @@ def convert(
             result = transcriber.transcribe_with_segments(
                 audio_file,
                 segment_duration=600,  # 10分钟
+                options=options,  # 显式传递 options 参数
                 progress_callback=update_progress
             )
         
@@ -469,6 +470,7 @@ def batch(
                 result = transcriber.transcribe_with_segments(
                     audio_file,
                     segment_duration=600,  # 10分钟
+                    options=options,  # 显式传递 options 参数
                     progress_callback=update_progress
                 )
             
