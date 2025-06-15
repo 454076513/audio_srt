@@ -16,7 +16,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "audio-srt=audio_srt.cli.main:main",
+            "audio_srt=audio_srt.cli.main:main",
         ],
     },
     author="Frank",
